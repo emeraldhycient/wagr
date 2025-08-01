@@ -5,6 +5,7 @@ import { ServicesService } from './services.service';
 import { CreateServiceProviderDto } from './dto/create-service-provider.dto';
 import { UpdateServiceProviderDto } from './dto/update-service-provider.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 
 @ApiTags('Services')
 @ApiBearerAuth()
@@ -69,8 +70,8 @@ export class ServicesController {
   @Put('bookings/:id/status')
   @ApiOperation({ summary: 'Update booking status' })
   @ApiResponse({ status: 200, description: 'Booking status updated successfully' })
-  async updateBookingStatus(@Request() req, @Param('id') id: string, @Body() body: { status: string }) {
-    return this.servicesService.updateBookingStatus(id, req.user.id, body.status);
+  async updateBookingStatus(@Request() req, @Param('id') id: string, @Body() updateBookingStatusDto: UpdateBookingStatusDto) {
+    return this.servicesService.updateBookingStatus(id, req.user.id, updateBookingStatusDto.status);
   }
 
   @Post('bookings/:id/reviews')

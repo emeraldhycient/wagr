@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceProviderDto } from './dto/create-service-provider.dto';
 import { UpdateServiceProviderDto } from './dto/update-service-provider.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { BookingStatus } from './dto/update-booking-status.dto';
 
 @Injectable()
 export class ServicesService {
@@ -253,7 +254,7 @@ export class ServicesService {
     return booking;
   }
 
-  async updateBookingStatus(id: string, userId: string, status: string) {
+  async updateBookingStatus(id: string, userId: string, status: BookingStatus) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: { serviceProvider: true },

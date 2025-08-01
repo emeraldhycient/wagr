@@ -107,4 +107,29 @@ export class AuthService {
       },
     });
   }
+
+  async validateUserByCredentials(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      userType: user.userType,
+      isVerified: user.isVerified,
+    };
+  }
 } 
