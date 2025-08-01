@@ -14,6 +14,7 @@ enum UserType {
   DOG_OWNER
   SERVICE_PROVIDER
   BOTH
+  ADMIN
 }
 
 enum Gender {
@@ -54,6 +55,14 @@ enum BreedingStatus {
   UNAVAILABLE
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model User {
   id                String   @id @default(cuid())
   email             String   @unique
@@ -80,6 +89,7 @@ model User {
   applications      AdoptionApplication[]
   breedingRequests  BreedingRequest[]
   notifications     Notification[]
+  orders            Order[]
 
   @@map("users")
 }
@@ -339,4 +349,50 @@ model Notification {
   user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  images      String[]
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id          String       @id @default(cuid())
+  status      OrderStatus  @default(PENDING)
+  total       Float
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  unitPrice   Float
+
+  // Relations
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
 }

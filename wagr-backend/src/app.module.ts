@@ -11,6 +11,8 @@ import { GalleryModule } from './gallery/gallery.module';
 import { ServicesModule } from './services/services.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ProductsModule } from './products/products.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     ServicesModule,
     PaymentsModule,
     NotificationsModule,
+    ProductsModule,
+    OrdersModule,
   ],
 })
 export class AppModule {} 
