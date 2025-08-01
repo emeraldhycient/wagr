@@ -80,6 +80,7 @@ model User {
   applications      AdoptionApplication[]
   breedingRequests  BreedingRequest[]
   notifications     Notification[]
+  orders            Order[]
 
   @@map("users")
 }
@@ -339,4 +340,107 @@ model Notification {
   user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+// Ecommerce Models
+enum ProductCategory {
+  TOYS
+  FOOD
+  ACCESSORIES
+  HEALTH
+  TRAINING
+  GROOMING
+  BEDS
+  COLLARS
+  LEASHES
+  BOWLS
+  OTHER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Product {
+  id                      String          @id @default(cuid())
+  name                    String
+  description             String
+  price                   Float
+  salePrice               Float?
+  category                ProductCategory
+  images                  String[]
+  stockQuantity           Int             @default(0)
+  isActive                Boolean         @default(true)
+  tags                    String[]
+  specifications          Json?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  // Relations
+  orderItems              OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id                      String      @id @default(cuid())
+  orderNumber             String      @unique
+  status                  OrderStatus @default(PENDING)
+  subtotal                Float
+  tax                     Float
+  shipping                Float
+  total                   Float
+  shippingAddress         Json
+  billingAddress          Json
+  notes                   String?
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  // Relations
+  userId                  String
+  user                    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems              OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                      String   @id @default(cuid())
+  quantity                Int
+  price                   Float
+  createdAt               DateTime @default(now())
+
+  // Relations
+  orderId                 String
+  order                   Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId               String
+  product                 Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+// Admin Models
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+}
+
+model Admin {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  password                String
+  firstName               String
+  lastName                String
+  role                    AdminRole @default(ADMIN)
+  isActive                Boolean   @default(true)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@map("admins")
 }
