@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wagr Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-900 text-white">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-paw mr-2"></i> Wagr Admin
+                </h1>
+            </div>
+            <nav class="mt-6">
+                <a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')">
+                    <i class="fas fa-chart-line mr-3"></i> Dashboard
+                </a>
+                <a href="#users" class="nav-link" onclick="showSection('users')">
+                    <i class="fas fa-users mr-3"></i> Users
+                </a>
+                <a href="#products" class="nav-link" onclick="showSection('products')">
+                    <i class="fas fa-shopping-bag mr-3"></i> Products
+                </a>
+                <a href="#orders" class="nav-link" onclick="showSection('orders')">
+                    <i class="fas fa-receipt mr-3"></i> Orders
+                </a>
+                <a href="#analytics" class="nav-link" onclick="showSection('analytics')">
+                    <i class="fas fa-chart-bar mr-3"></i> Analytics
+                </a>
+                <a href="#settings" class="nav-link" onclick="showSection('settings')">
+                    <i class="fas fa-cog mr-3"></i> Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="px-6 py-4 flex justify-between items-center">
+                    <h2 id="section-title" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <img src="https://ui-avatars.com/api/?name=Admin&background=FF6B6B&color=fff" 
+                                 class="w-8 h-8 rounded-full" alt="Admin">
+                            <span class="text-gray-700">Admin</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Users</p>
+                                <p class="text-3xl font-bold text-gray-800" id="total-users">0</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-users text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Orders</p>
+                                <p class="text-3xl font-bold text-gray-800" id="total-orders">0</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-shopping-cart text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Revenue</p>
+                                <p class="text-3xl font-bold text-gray-800" id="total-revenue">$0</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-dollar-sign text-yellow-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Products</p>
+                                <p class="text-3xl font-bold text-gray-800" id="total-products">0</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <i class="fas fa-box text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Revenue Overview</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Order Status</h3>
+                        <canvas id="orderStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="mt-8 bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b">
+                        <h3 class="text-lg font-semibold">Recent Orders</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-orders" class="divide-y divide-gray-200">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users" class="section hidden p-6">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">User Management</h3>
+                        <div class="flex space-x-2">
+                            <input type="text" id="user-search" placeholder="Search users..." 
+                                   class="px-4 py-2 border rounded-lg">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dogs</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table" class="divide-y divide-gray-200">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products" class="section hidden p-6">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Product Management</h3>
+                        <button onclick="showAddProductModal()" 
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-plus mr-2"></i> Add Product
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table" class="divide-y divide-gray-200">
+                                <!-- Products will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="section hidden p-6">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b">
+                        <h3 class="text-lg font-semibold">Order Management</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Number</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table" class="divide-y divide-gray-200">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section hidden p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">User Growth</h3>
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Product Categories</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Service Bookings</h3>
+                        <canvas id="bookingsChart"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Adoption Success Rate</h3>
+                        <canvas id="adoptionChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-6">System Settings</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+                            <input type="text" value="Wagr - Dog Social Platform" 
+                                   class="w-full px-4 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Admin Email</label>
+                            <input type="email" value="admin@wagr.com" 
+                                   class="w-full px-4 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Commission Rate (%)</label>
+                            <input type="number" value="15" min="0" max="100" 
+                                   class="w-full px-4 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 class="text-xl font-semibold mb-4">Add New Product</h3>
+            <form id="addProductForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                        <input type="text" name="name" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                        <input type="text" name="sku" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select name="category" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="FOOD">Food</option>
+                            <option value="TOYS">Toys</option>
+                            <option value="ACCESSORIES">Accessories</option>
+                            <option value="GROOMING">Grooming</option>
+                            <option value="HEALTH">Health</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                        <input type="number" name="price" step="0.01" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                        <input type="number" name="stock" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" onclick="hideAddProductModal()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        Add Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .nav-link {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: #e5e7eb;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid #FF6B6B;
+            color: white;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+    </style>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let authToken = localStorage.getItem('adminToken');
+
+        // Axios configuration
+        axios.defaults.baseURL = API_BASE_URL;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName).classList.add('active');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update title
+            const titles = {
+                dashboard: 'Dashboard',
+                users: 'User Management',
+                products: 'Product Management',
+                orders: 'Order Management',
+                analytics: 'Analytics',
+                settings: 'Settings'
+            };
+            document.getElementById('section-title').textContent = titles[sectionName];
+            
+            // Load section data
+            loadSectionData(sectionName);
+        }
+
+        // Load section data
+        async function loadSectionData(section) {
+            try {
+                switch(section) {
+                    case 'dashboard':
+                        await loadDashboard();
+                        break;
+                    case 'users':
+                        await loadUsers();
+                        break;
+                    case 'products':
+                        await loadProducts();
+                        break;
+                    case 'orders':
+                        await loadOrders();
+                        break;
+                    case 'analytics':
+                        await loadAnalytics();
+                        break;
+                }
+            } catch (error) {
+                console.error('Error loading section data:', error);
+                if (error.response?.status === 401) {
+                    window.location.href = '/admin/login.html';
+                }
+            }
+        }
+
+        // Dashboard functions
+        async function loadDashboard() {
+            try {
+                const response = await axios.get('/admin/dashboard');
+                const data = response.data;
+                
+                // Update stats
+                document.getElementById('total-users').textContent = data.overview.totalUsers;
+                document.getElementById('total-orders').textContent = data.overview.totalOrders;
+                document.getElementById('total-revenue').textContent = `$${data.revenue.totalRevenue.toFixed(2)}`;
+                document.getElementById('total-products').textContent = data.overview.totalProducts;
+                
+                // Update recent orders
+                const ordersHtml = data.recentOrders.map(order => `
+                    <tr>
+                        <td class="px-6 py-4 text-sm">${order.orderNumber}</td>
+                        <td class="px-6 py-4 text-sm">${order.user.firstName} ${order.user.lastName}</td>
+                        <td class="px-6 py-4 text-sm">$${order.total.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="px-2 py-1 text-xs rounded-full bg-${getStatusColor(order.status)}-100 text-${getStatusColor(order.status)}-800">
+                                ${order.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm">${new Date(order.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+                document.getElementById('recent-orders').innerHTML = ordersHtml;
+                
+                // Update charts
+                updateRevenueChart(data.revenue.dailyRevenue);
+                updateOrderStatusChart(data.ordersByStatus);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // Users functions
+        async function loadUsers() {
+            try {
+                const response = await axios.get('/admin/users');
+                const data = response.data;
+                
+                const usersHtml = data.users.map(user => `
+                    <tr>
+                        <td class="px-6 py-4 text-sm">${user.firstName} ${user.lastName}</td>
+                        <td class="px-6 py-4 text-sm">${user.email}</td>
+                        <td class="px-6 py-4 text-sm">${user.userType}</td>
+                        <td class="px-6 py-4 text-sm">${user.dogs.length}</td>
+                        <td class="px-6 py-4 text-sm">${new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2">View</button>
+                            <button class="text-red-600 hover:text-red-800">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('users-table').innerHTML = usersHtml;
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        // Products functions
+        async function loadProducts() {
+            try {
+                const response = await axios.get('/products?limit=50');
+                const data = response.data;
+                
+                const productsHtml = data.products.map(product => `
+                    <tr>
+                        <td class="px-6 py-4 text-sm">
+                            <div class="flex items-center">
+                                <img src="${product.images[0] || 'https://via.placeholder.com/40'}" 
+                                     class="w-10 h-10 rounded mr-3" alt="${product.name}">
+                                <span>${product.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm">${product.sku}</td>
+                        <td class="px-6 py-4 text-sm">${product.category}</td>
+                        <td class="px-6 py-4 text-sm">$${product.price.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-sm">${product.stock}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="px-2 py-1 text-xs rounded-full bg-${product.isActive ? 'green' : 'red'}-100 text-${product.isActive ? 'green' : 'red'}-800">
+                                ${product.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                            <button class="text-red-600 hover:text-red-800">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('products-table').innerHTML = productsHtml;
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        // Orders functions
+        async function loadOrders() {
+            try {
+                const response = await axios.get('/orders/admin/all');
+                const data = response.data;
+                
+                const ordersHtml = data.orders.map(order => `
+                    <tr>
+                        <td class="px-6 py-4 text-sm">${order.orderNumber}</td>
+                        <td class="px-6 py-4 text-sm">${order.user.firstName} ${order.user.lastName}</td>
+                        <td class="px-6 py-4 text-sm">${order.items.length} items</td>
+                        <td class="px-6 py-4 text-sm">$${order.total.toFixed(2)}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <select onchange="updateOrderStatus('${order.id}', this.value)" 
+                                    class="text-sm border rounded px-2 py-1">
+                                <option value="PENDING" ${order.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                                <option value="PROCESSING" ${order.status === 'PROCESSING' ? 'selected' : ''}>Processing</option>
+                                <option value="SHIPPED" ${order.status === 'SHIPPED' ? 'selected' : ''}>Shipped</option>
+                                <option value="DELIVERED" ${order.status === 'DELIVERED' ? 'selected' : ''}>Delivered</option>
+                                <option value="CANCELLED" ${order.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 text-sm">${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <button class="text-blue-600 hover:text-blue-800">View Details</button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('orders-table').innerHTML = ordersHtml;
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        // Chart functions
+        function updateRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => new Date(d.date).toLocaleDateString()),
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: data.map(d => d.revenue),
+                        borderColor: '#FF6B6B',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateOrderStatusChart(data) {
+            const ctx = document.getElementById('orderStatusChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.status),
+                    datasets: [{
+                        data: data.map(d => d._count),
+                        backgroundColor: [
+                            '#3B82F6',
+                            '#10B981',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#8B5CF6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+
+        // Helper functions
+        function getStatusColor(status) {
+            const colors = {
+                PENDING: 'yellow',
+                PROCESSING: 'blue',
+                SHIPPED: 'purple',
+                DELIVERED: 'green',
+                CANCELLED: 'red',
+                REFUNDED: 'gray'
+            };
+            return colors[status] || 'gray';
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            try {
+                await axios.patch(`/orders/admin/${orderId}/status`, { status });
+                loadOrders();
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('Failed to update order status');
+            }
+        }
+
+        function showAddProductModal() {
+            document.getElementById('addProductModal').classList.remove('hidden');
+        }
+
+        function hideAddProductModal() {
+            document.getElementById('addProductModal').classList.add('hidden');
+            document.getElementById('addProductForm').reset();
+        }
+
+        // Form submission
+        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const productData = {
+                name: formData.get('name'),
+                sku: formData.get('sku'),
+                description: formData.get('description'),
+                category: formData.get('category'),
+                price: parseFloat(formData.get('price')),
+                stock: parseInt(formData.get('stock')),
+                images: ['https://via.placeholder.com/300'],
+                isActive: true
+            };
+
+            try {
+                await axios.post('/products', productData);
+                hideAddProductModal();
+                loadProducts();
+            } catch (error) {
+                console.error('Error adding product:', error);
+                alert('Failed to add product');
+            }
+        });
+
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('dashboard');
+        });
+    </script>
+</body>
+</html>

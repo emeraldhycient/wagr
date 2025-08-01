@@ -1,14 +1,17 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const configService = app.get(ConfigService);
 
   // Enable CORS
   app.enableCors({
-    origin: true,
+    origin: ['http://localhost:8081', 'http://localhost:3001', 'http://localhost:3000'],
     credentials: true,
   });
 
@@ -16,24 +19,24 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
       transform: true,
+      forbidNonWhitelisted: true,
     }),
   );
 
-  // Swagger documentation
-  const config = new DocumentBuilder()
-    .setTitle('Wagr API')
-    .setDescription('Dog Social Platform API')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // Serve static files for admin dashboard
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.setBaseViewsDir(join(__dirname, '..', 'public'));
 
-  const port = process.env.PORT || 3000;
+  // API prefix for all routes except static files
+  app.setGlobalPrefix('api', {
+    exclude: ['/admin', '/admin/*'],
+  });
+
+  const port = configService.get('PORT') || 3000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Admin dashboard available at: http://localhost:${port}/admin`);
 }
 
 bootstrap(); 

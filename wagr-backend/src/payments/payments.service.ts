@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma/prisma.service';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -7,7 +8,10 @@ export class PaymentsService {
   private stripe: Stripe | null = null;
   private readonly logger = new Logger(PaymentsService.name);
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService
+  ) {
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     
     if (!stripeSecretKey) {
@@ -117,6 +121,52 @@ export class PaymentsService {
     } catch (error) {
       this.logger.error('Failed to refund payment:', error);
       throw new Error('Failed to refund payment');
+    }
+  }
+
+  // Webhook handlers
+  async handlePaymentSuccess(paymentIntent: any) {
+    this.logger.log(`Payment succeeded: ${paymentIntent.id}`);
+    
+    // Update order status if payment is for an order
+    if (paymentIntent.metadata?.orderId) {
+      await this.prisma.order.update({
+        where: { id: paymentIntent.metadata.orderId },
+        data: { 
+          status: 'PROCESSING',
+          paymentIntentId: paymentIntent.id
+        }
+      });
+    }
+
+    // Send confirmation email, update inventory, etc.
+    // This would be expanded based on business requirements
+  }
+
+  async handlePaymentFailure(paymentIntent: any) {
+    this.logger.log(`Payment failed: ${paymentIntent.id}`);
+    
+    // Update order status if payment is for an order
+    if (paymentIntent.metadata?.orderId) {
+      await this.prisma.order.update({
+        where: { id: paymentIntent.metadata.orderId },
+        data: { 
+          status: 'CANCELLED',
+          paymentIntentId: paymentIntent.id
+        }
+      });
+    }
+
+    // Send failure notification, restore inventory, etc.
+  }
+
+  async handleCheckoutComplete(session: any) {
+    this.logger.log(`Checkout completed: ${session.id}`);
+    
+    // Create order from checkout session
+    if (session.metadata?.userId) {
+      // This would create an order based on the checkout session
+      // Implementation depends on how checkout sessions are structured
     }
   }
 } 
