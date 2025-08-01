@@ -10,11 +10,13 @@ exports.AdoptionModule = void 0;
 const common_1 = require("@nestjs/common");
 const adoption_service_1 = require("./adoption.service");
 const adoption_controller_1 = require("./adoption.controller");
+const prisma_module_1 = require("../prisma/prisma.module");
 let AdoptionModule = class AdoptionModule {
 };
 exports.AdoptionModule = AdoptionModule;
 exports.AdoptionModule = AdoptionModule = __decorate([
     (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
         providers: [adoption_service_1.AdoptionService],
         controllers: [adoption_controller_1.AdoptionController],
         exports: [adoption_service_1.AdoptionService],

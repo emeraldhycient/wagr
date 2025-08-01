@@ -10,11 +10,13 @@ exports.BreedingModule = void 0;
 const common_1 = require("@nestjs/common");
 const breeding_service_1 = require("./breeding.service");
 const breeding_controller_1 = require("./breeding.controller");
+const prisma_module_1 = require("../prisma/prisma.module");
 let BreedingModule = class BreedingModule {
 };
 exports.BreedingModule = BreedingModule;
 exports.BreedingModule = BreedingModule = __decorate([
     (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
         providers: [breeding_service_1.BreedingService],
         controllers: [breeding_controller_1.BreedingController],
         exports: [breeding_service_1.BreedingService],

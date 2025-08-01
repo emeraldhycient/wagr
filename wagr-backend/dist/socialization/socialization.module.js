@@ -10,11 +10,13 @@ exports.SocializationModule = void 0;
 const common_1 = require("@nestjs/common");
 const socialization_service_1 = require("./socialization.service");
 const socialization_controller_1 = require("./socialization.controller");
+const prisma_module_1 = require("../prisma/prisma.module");
 let SocializationModule = class SocializationModule {
 };
 exports.SocializationModule = SocializationModule;
 exports.SocializationModule = SocializationModule = __decorate([
     (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule],
         providers: [socialization_service_1.SocializationService],
         controllers: [socialization_controller_1.SocializationController],
         exports: [socialization_service_1.SocializationService],
