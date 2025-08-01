@@ -1,0 +1,542 @@
+# Dog Social Platform - Complete Development Specification
+
+Build a comprehensive dog social platform with an Expo React Native mobile app and NestJS backend. This is a multi-feature platform connecting dog owners, service providers, and dog lovers.
+
+## Core Features Overview
+
+### 1. Dog Socialization Hub
+- **Play Dates**: Schedule and organize dog meetups
+- **Parties & Events**: Create and join dog-themed social events
+- **Location-based matching**: Find nearby dogs for socialization
+- **Group management**: Create recurring playgroups
+- **Event calendar**: Visual calendar for all dog events
+- **RSVP system**: Manage attendees and capacity limits
+
+### 2. Dog Breeding Matchmaking
+- **Breed compatibility matching**: Algorithm-based breed pairing
+- **Stud/breeding female profiles**: Detailed breeding profiles
+- **Health screening verification**: Medical history integration
+- **Breeding contracts**: Document templates and management
+- **Breeding history tracking**: Previous litters and outcomes
+- **Genetic information**: Store and display genetic test results
+
+### 3. Dog Adoption & Discovery
+- **Adoption listings**: Comprehensive dog profiles for adoption
+- **Shelter integration**: Connect with local shelters and rescues
+- **Adoption application system**: Streamlined application process
+- **Background checks**: Integration with verification services
+- **Foster network**: Connect foster families with dogs needing temporary homes
+- **Success stories**: Share adoption success stories
+
+### 4. Dog Gallery (Pinterest-style)
+- **Photo/video uploads**: High-quality media sharing
+- **Categorized boards**: Organize by breed, activity, age, etc.
+- **Social interactions**: Like, comment, share, save
+- **Hashtag system**: Discoverability through tags
+- **Featured content**: Highlight popular or trending posts
+- **User-generated content contests**: Monthly photo competitions
+
+### 5. Dog Walking Services
+- **Service provider profiles**: Detailed walker/sitter profiles
+- **Booking system**: Schedule and manage dog walking appointments
+- **GPS tracking**: Real-time walk tracking and updates
+- **Payment integration**: Secure payment processing
+- **Rating and review system**: Two-way rating system
+- **Emergency contacts**: Quick access to emergency information
+- **Walk reports**: Photos and updates from each walk
+
+### 6. Dog Tips & Resources
+- **Expert articles**: Veterinarian and trainer-authored content
+- **Breed-specific guides**: Tailored advice for different breeds
+- **Training tutorials**: Video-based training content
+- **Health monitoring**: Track vaccinations, medications, vet visits
+- **Community Q&A**: User-generated questions and expert answers
+
+## Detailed Technical Specifications
+
+### Mobile App (Expo React Native)
+
+
+#### Screen Structure
+```
+App/
+├── screens/
+│   ├── auth/
+│   │   ├── LoginScreen.tsx
+│   │   ├── RegisterScreen.tsx
+│   │   ├── OnboardingScreen.tsx (dog owners)
+│   │   └── ServiceProviderOnboardingScreen.tsx
+│   ├── main/
+│   │   ├── HomeScreen.tsx (dashboard)
+│   │   ├── SocializationScreen.tsx
+│   │   ├── BreedingScreen.tsx
+│   │   ├── AdoptionScreen.tsx
+│   │   ├── GalleryScreen.tsx
+│   │   ├── ServicesScreen.tsx
+│   │   └── ProfileScreen.tsx
+│   ├── socialization/
+│   │   ├── CreateEventScreen.tsx
+│   │   ├── EventDetailsScreen.tsx
+│   │   ├── PlayDateScreen.tsx
+│   │   └── EventCalendarScreen.tsx
+│   ├── breeding/
+│   │   ├── BreedingProfileScreen.tsx
+│   │   ├── MatchingScreen.tsx
+│   │   └── BreedingHistoryScreen.tsx
+│   ├── adoption/
+│   │   ├── AdoptionListScreen.tsx
+│   │   ├── DogProfileScreen.tsx
+│   │   └── ApplicationScreen.tsx
+│   ├── gallery/
+│   │   ├── FeedScreen.tsx
+│   │   ├── UploadScreen.tsx
+│   │   └── BoardScreen.tsx
+│   └── services/
+│       ├── WalkerListScreen.tsx
+│       ├── BookingScreen.tsx
+│       ├── TrackingScreen.tsx
+│       └── WalkerDashboardScreen.tsx
+```
+
+### Backend (NestJS)
+
+#### Project Structure
+```
+backend/
+├── src/
+│   ├── auth/
+│   │   ├── auth.module.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.controller.ts
+│   │   ├── jwt.strategy.ts
+│   │   └── guards/
+│   ├── users/
+│   │   ├── users.module.ts
+│   │   ├── users.service.ts
+│   │   ├── users.controller.ts
+│   │   └── dto/
+│   ├── dogs/
+│   │   ├── dogs.module.ts
+│   │   ├── dogs.service.ts
+│   │   ├── dogs.controller.ts
+│   │   └── entities/
+│   ├── socialization/
+│   │   ├── events.module.ts
+│   │   ├── events.service.ts
+│   │   └── events.controller.ts
+│   ├── breeding/
+│   │   ├── breeding.module.ts
+│   │   ├── breeding.service.ts
+│   │   └── breeding.controller.ts
+│   ├── adoption/
+│   │   ├── adoption.module.ts
+│   │   ├── adoption.service.ts
+│   │   └── adoption.controller.ts
+│   ├── gallery/
+│   │   ├── gallery.module.ts
+│   │   ├── gallery.service.ts
+│   │   └── gallery.controller.ts
+│   ├── services/
+│   │   ├── walking.module.ts
+│   │   ├── walking.service.ts
+│   │   └── walking.controller.ts
+│   ├── payments/
+│   │   ├── payments.module.ts
+│   │   ├── payments.service.ts
+│   │   └── payments.controller.ts
+│   ├── notifications/
+│   │   ├── notifications.module.ts
+│   │   ├── notifications.service.ts
+│   │   └── notifications.controller.ts
+│   └── common/
+│       ├── guards/
+│       ├── interceptors/
+│       ├── decorators/
+│       └── utils/
+```
+
+## Database Schema (PostgreSQL with TypeORM)
+
+### Core Entities
+
+#### User Entity
+```typescript
+@Entity()
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ unique: true })
+  email: string;
+
+  @Column()
+  password: string;
+
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ type: 'enum', enum: UserType })
+  userType: UserType; // DOG_OWNER, SERVICE_PROVIDER, BOTH
+
+  @Column({ type: 'json', nullable: true })
+  address: Address;
+
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @OneToMany(() => Dog, dog => dog.owner)
+  dogs: Dog[];
+
+  @OneToMany(() => ServiceProvider, provider => provider.user)
+  serviceProvider: ServiceProvider[];
+}
+```
+
+#### Dog Entity
+```typescript
+@Entity()
+export class Dog {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column()
+  breed: string;
+
+  @Column({ type: 'date' })
+  birthDate: Date;
+
+  @Column({ type: 'enum', enum: Gender })
+  gender: Gender;
+
+  @Column({ type: 'json', nullable: true })
+  medicalConditions: string[];
+
+  @Column()
+  furType: string;
+
+  @Column()
+  furColor: string;
+
+  @Column({ type: 'enum', enum: SocializationLevel })
+  socializationLevel: SocializationLevel; // BEGINNER, INTERMEDIATE, PRO
+
+  @Column({ type: 'json' })
+  vaccinations: Vaccination[];
+
+  @Column({ type: 'text', array: true, default: [] })
+  interests: string[];
+
+  @Column({ type: 'text', array: true, default: [] })
+  photos: string[];
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ default: false })
+  isAvailableForBreeding: boolean;
+
+  @Column({ default: false })
+  isForAdoption: boolean;
+
+  @ManyToOne(() => User, user => user.dogs)
+  owner: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
+```
+
+#### Event Entity (Socialization)
+```typescript
+@Entity()
+export class Event {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  title: string;
+
+  @Column({ type: 'text' })
+  description: string;
+
+  @Column({ type: 'enum', enum: EventType })
+  eventType: EventType; // PLAYDATE, PARTY, TRAINING, WALK
+
+  @Column({ type: 'timestamp' })
+  startTime: Date;
+
+  @Column({ type: 'timestamp' })
+  endTime: Date;
+
+  @Column({ type: 'json' })
+  location: Location;
+
+  @Column({ default: 10 })
+  maxAttendees: number;
+
+  @Column({ type: 'text', array: true, default: [] })
+  allowedBreeds: string[];
+
+  @Column({ type: 'enum', enum: SocializationLevel, array: true })
+  allowedSocializationLevels: SocializationLevel[];
+
+  @ManyToOne(() => User, user => user.events)
+  organizer: User;
+
+  @ManyToMany(() => Dog, dog => dog.events)
+  @JoinTable()
+  attendees: Dog[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+```
+
+## Onboarding Flow
+
+### Dog Owner Onboarding
+1. **Account Creation**
+   - Email/password registration
+   - Phone verification
+   - Profile photo upload
+   - Location setup
+
+2. **Dog Profile Creation**
+   - Basic information (name, breed, age)
+   - Physical characteristics (fur type, color, size)
+   - Medical information (conditions, allergies)
+   - Vaccination records (upload PDF/JPEG, store as base64)
+   - Socialization level assessment
+   - Interests and preferences
+   - Photo gallery upload
+
+3. **Preferences Setup**
+   - Notification preferences
+   - Privacy settings
+   - Service area radius
+   - Feature interests (breeding, adoption, services)
+
+### Service Provider Onboarding
+1. **Professional Information**
+   - Business name and license
+   - Service types offered
+   - Experience and certifications
+   - Insurance verification
+   - Background check upload
+
+2. **Service Details**
+   - Service area and radius
+   - Availability schedule
+   - Pricing structure
+   - Special services offered
+   - Emergency procedures
+
+3. **Verification Process**
+   - Document review
+   - Reference checks
+   - Trial period setup
+
+## Key Features Implementation
+
+### Authentication & Security
+- JWT-based authentication
+- Role-based access control
+- OAuth2 integration (Google, Apple)
+- Two-factor authentication
+- Data encryption at rest
+- API rate limiting
+- Input validation and sanitization
+
+### Real-time Features
+- WebSocket integration for live chat
+- Real-time location tracking for walks
+- Live event updates
+- Push notifications
+- In-app messaging system
+
+### Payment Integration
+- Stripe payment processing
+- Subscription management
+- Service booking payments
+- Automatic payouts to service providers
+- Invoice generation
+- Refund handling
+
+### File Management
+- AWS S3 integration for media storage
+- Image optimization and resizing
+- Video compression
+- PDF document handling
+- Secure file upload with validation
+- CDN integration for fast delivery
+
+### Geolocation Features
+- Location-based service discovery
+- GPS tracking for dog walks
+- Geofenced event notifications
+- Distance calculations
+- Interactive maps integration
+
+### Search & Filtering
+- Elasticsearch integration
+- Advanced filtering options
+- Breed-specific searches
+- Location-based results
+- Real-time search suggestions
+- Saved search preferences
+
+### Analytics & Monitoring
+- User behavior tracking
+- Performance monitoring
+- Error logging and reporting
+- Business metrics dashboard
+- A/B testing framework
+
+## API Endpoints Structure
+
+### Authentication
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
+
+### User Management
+- `GET /users/profile`
+- `PUT /users/profile`
+- `POST /users/upload-avatar`
+- `GET /users/preferences`
+- `PUT /users/preferences`
+
+### Dog Management
+- `POST /dogs`
+- `GET /dogs`
+- `GET /dogs/:id`
+- `PUT /dogs/:id`
+- `DELETE /dogs/:id`
+- `POST /dogs/:id/photos`
+- `POST /dogs/:id/vaccinations`
+
+### Events & Socialization
+- `GET /events`
+- `POST /events`
+- `GET /events/:id`
+- `PUT /events/:id`
+- `DELETE /events/:id`
+- `POST /events/:id/join`
+- `DELETE /events/:id/leave`
+
+### Breeding
+- `GET /breeding/matches`
+- `POST /breeding/profiles`
+- `GET /breeding/profiles/:id`
+- `POST /breeding/requests`
+- `GET /breeding/requests`
+
+### Adoption
+- `GET /adoption/dogs`
+- `POST /adoption/dogs`
+- `POST /adoption/applications`
+- `GET /adoption/applications`
+- `PUT /adoption/applications/:id/status`
+
+### Services
+- `GET /services/providers`
+- `GET /services/providers/:id`
+- `POST /services/bookings`
+- `GET /services/bookings`
+- `PUT /services/bookings/:id/status`
+- `POST /services/reviews`
+
+### Gallery
+- `GET /gallery/feed`
+- `POST /gallery/posts`
+- `GET /gallery/posts/:id`
+- `POST /gallery/posts/:id/like`
+- `POST /gallery/posts/:id/comments`
+
+## Development Guidelines
+
+### Code Quality
+- TypeScript throughout the application
+- ESLint and Prettier configuration
+- Comprehensive unit and integration tests
+- Code coverage targets (80%+)
+- Git hooks for pre-commit validation
+
+### Performance Optimization
+- Image lazy loading
+- API response caching
+- Database query optimization
+- Bundle size optimization
+- Memory leak prevention
+
+### Deployment Strategy
+- Docker containerization
+- CI/CD pipeline setup
+- Environment-specific configurations
+- Health checks and monitoring
+- Automated backup systems
+
+### Security Measures
+- OWASP security guidelines
+- Regular security audits
+- Dependency vulnerability scanning
+- Data privacy compliance (GDPR)
+- Secure API design patterns
+
+## Testing Requirements
+
+### Mobile App Testing
+- Unit tests for components and utilities
+- Integration tests for API calls
+- E2E tests for critical user flows
+- Device-specific testing (iOS/Android)
+- Performance testing
+
+### Backend Testing
+- Unit tests for services and controllers
+- Integration tests for database operations
+- API endpoint testing
+- Security testing
+- Load testing
+
+## Additional Considerations
+
+### Scalability
+- Auto-scaling configurations
+- Performance monitoring
+
+### Accessibility
+- Screen reader compatibility
+- Voice navigation support
+- High contrast mode
+- Font size adjustability
+- Keyboard navigation
+
+### Localization
+- Multi-language support framework
+- Currency localization
+- Date/time formatting
+- Cultural adaptation considerations
+- RTL language support
+

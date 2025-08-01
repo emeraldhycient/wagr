@@ -1,0 +1,342 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  DOG_OWNER
+  SERVICE_PROVIDER
+  BOTH
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum SocializationLevel {
+  BEGINNER
+  INTERMEDIATE
+  PRO
+}
+
+enum EventType {
+  PLAYDATE
+  PARTY
+  TRAINING
+  WALK
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum AdoptionStatus {
+  AVAILABLE
+  PENDING
+  ADOPTED
+  UNAVAILABLE
+}
+
+enum BreedingStatus {
+  AVAILABLE
+  IN_BREEDING
+  UNAVAILABLE
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  password          String
+  firstName         String
+  lastName          String
+  phone             String?
+  userType          UserType @default(DOG_OWNER)
+  address           Json?
+  isVerified        Boolean  @default(false)
+  profilePhoto      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  dogs              Dog[]
+  events            Event[]
+  serviceProvider   ServiceProvider?
+  bookings          Booking[]
+  reviews           Review[]
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+  applications      AdoptionApplication[]
+  breedingRequests  BreedingRequest[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+model Dog {
+  id                      String            @id @default(cuid())
+  name                    String
+  breed                   String
+  birthDate               DateTime
+  gender                  Gender
+  medicalConditions       String[]
+  furType                 String
+  furColor                String
+  socializationLevel      SocializationLevel @default(BEGINNER)
+  vaccinations            Json?
+  interests               String[]
+  photos                  String[]
+  isActive                Boolean           @default(true)
+  isAvailableForBreeding  Boolean           @default(false)
+  isForAdoption           Boolean           @default(false)
+  weight                  Float?
+  height                  Float?
+  description             String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  // Relations
+  ownerId                 String
+  owner                   User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  events                  Event[]
+  breedingProfile         BreedingProfile?
+  adoptionProfile         AdoptionProfile?
+  bookings                Booking[]
+  posts                   Post[]
+
+  @@map("dogs")
+}
+
+model Event {
+  id                      String            @id @default(cuid())
+  title                   String
+  description             String
+  eventType               EventType
+  startTime               DateTime
+  endTime                 DateTime
+  location                Json
+  maxAttendees            Int               @default(10)
+  allowedBreeds           String[]
+  allowedSocializationLevels SocializationLevel[]
+  isActive                Boolean           @default(true)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  // Relations
+  organizerId             String
+  organizer               User              @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  attendees               Dog[]
+
+  @@map("events")
+}
+
+model ServiceProvider {
+  id                      String   @id @default(cuid())
+  businessName            String
+  license                 String?
+  serviceTypes            String[]
+  experience              String?
+  certifications          String[]
+  insurance               String?
+  backgroundCheck         String?
+  serviceArea             Json
+  availability            Json
+  pricing                 Json
+  specialServices         String[]
+  emergencyProcedures     String?
+  isVerified              Boolean @default(false)
+  rating                  Float   @default(0)
+  totalReviews            Int     @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  userId                  String @unique
+  user                    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings                Booking[]
+
+  @@map("service_providers")
+}
+
+model Booking {
+  id                      String        @id @default(cuid())
+  startTime               DateTime
+  endTime                 DateTime
+  status                  BookingStatus @default(PENDING)
+  totalPrice              Float
+  notes                   String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  // Relations
+  userId                  String
+  user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dogId                   String
+  dog                     Dog           @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  serviceProviderId       String
+  serviceProvider         ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+  reviews                 Review[]
+
+  @@map("bookings")
+}
+
+model Review {
+  id                      String   @id @default(cuid())
+  rating                  Int
+  comment                 String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingId               String
+  booking                 Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model BreedingProfile {
+  id                      String         @id @default(cuid())
+  status                  BreedingStatus @default(AVAILABLE)
+  healthScreening         Json?
+  geneticTests            Json?
+  breedingHistory         Json?
+  preferences             Json?
+  isStud                  Boolean        @default(false)
+  isBreedingFemale        Boolean        @default(false)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  // Relations
+  dogId                   String @unique
+  dog                     Dog    @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  requests                BreedingRequest[]
+
+  @@map("breeding_profiles")
+}
+
+model BreedingRequest {
+  id                      String   @id @default(cuid())
+  status                  String   @default("PENDING")
+  message                 String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  requesterId             String
+  requester               User    @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  breedingProfileId       String
+  breedingProfile         BreedingProfile @relation(fields: [breedingProfileId], references: [id], onDelete: Cascade)
+
+  @@map("breeding_requests")
+}
+
+model AdoptionProfile {
+  id                      String         @id @default(cuid())
+  status                  AdoptionStatus @default(AVAILABLE)
+  story                   String?
+  specialNeeds            String[]
+  adoptionFee             Float?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  // Relations
+  dogId                   String @unique
+  dog                     Dog    @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  applications            AdoptionApplication[]
+
+  @@map("adoption_profiles")
+}
+
+model AdoptionApplication {
+  id                      String   @id @default(cuid())
+  status                  String   @default("PENDING")
+  message                 String?
+  backgroundCheck         Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  applicantId             String
+  applicant               User    @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  adoptionProfileId       String
+  adoptionProfile         AdoptionProfile @relation(fields: [adoptionProfileId], references: [id], onDelete: Cascade)
+
+  @@map("adoption_applications")
+}
+
+model Post {
+  id                      String   @id @default(cuid())
+  content                 String?
+  media                   String[]
+  hashtags                String[]
+  isPublic                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dogId                   String?
+  dog                     Dog?     @relation(fields: [dogId], references: [id], onDelete: SetNull)
+  comments                Comment[]
+  likes                   Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id                      String   @id @default(cuid())
+  content                 String
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId                  String
+  post                    Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id                      String   @id @default(cuid())
+  createdAt               DateTime @default(now())
+
+  // Relations
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId                  String
+  post                    Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Notification {
+  id                      String   @id @default(cuid())
+  title                   String
+  message                 String
+  type                    String
+  isRead                  Boolean  @default(false)
+  createdAt               DateTime @default(now())
+
+  // Relations
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
