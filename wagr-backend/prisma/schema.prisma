@@ -14,6 +14,7 @@ enum UserType {
   DOG_OWNER
   SERVICE_PROVIDER
   BOTH
+  ADMIN
 }
 
 enum Gender {
@@ -54,6 +55,27 @@ enum BreedingStatus {
   UNAVAILABLE
 }
 
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum ProductCategory {
+  FOOD
+  TOYS
+  ACCESSORIES
+  GROOMING
+  HEALTH
+  TRAINING
+  CLOTHING
+  BEDS
+  OTHER
+}
+
 model User {
   id                String   @id @default(cuid())
   email             String   @unique
@@ -80,6 +102,9 @@ model User {
   applications      AdoptionApplication[]
   breedingRequests  BreedingRequest[]
   notifications     Notification[]
+  cart              Cart?
+  orders            Order[]
+  adminActions      AdminAction[]
 
   @@map("users")
 }
@@ -339,4 +364,114 @@ model Notification {
   user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model Product {
+  id                      String   @id @default(cuid())
+  name                    String
+  description             String
+  category                ProductCategory
+  price                   Float
+  salePrice               Float?
+  sku                     String   @unique
+  images                  String[]
+  stock                   Int      @default(0)
+  isActive                Boolean  @default(true)
+  tags                    String[]
+  specifications          Json?
+  weight                  Float?
+  dimensions              Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  cartItems               CartItem[]
+  orderItems              OrderItem[]
+
+  @@map("products")
+}
+
+model Cart {
+  id                      String   @id @default(cuid())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                   CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id                      String   @id @default(cuid())
+  quantity                Int      @default(1)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relations
+  cartId                  String
+  cart                    Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId               String
+  product                 Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  id                      String       @id @default(cuid())
+  orderNumber             String       @unique
+  status                  OrderStatus  @default(PENDING)
+  subtotal                Float
+  tax                     Float
+  shipping                Float
+  total                   Float
+  shippingAddress         Json
+  billingAddress          Json
+  paymentMethod           String
+  paymentIntentId         String?
+  trackingNumber          String?
+  notes                   String?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  // Relations
+  userId                  String
+  user                    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items                   OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                      String   @id @default(cuid())
+  quantity                Int
+  price                   Float
+  total                   Float
+  createdAt               DateTime @default(now())
+
+  // Relations
+  orderId                 String
+  order                   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId               String
+  product                 Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+model AdminAction {
+  id                      String   @id @default(cuid())
+  action                  String
+  entity                  String
+  entityId                String?
+  details                 Json?
+  createdAt               DateTime @default(now())
+
+  // Relations
+  adminId                 String
+  admin                   User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("admin_actions")
 }
